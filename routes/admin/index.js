@@ -47,37 +47,39 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  instance.get("/get/products", async function (request, reply) {
-    try {
-      const pool = new Pool()
-      const res = await pool.query("select * from products", [])
-      await pool.end()
-
-      return res.rows
-    } catch (err) {
-      console.log(err)
-      reply.code(500).send(err.message)
-    }
-  })
-
-  instance.get("/get/products/p_type_id", async function (request, reply) {
-    try {
-      const new_p_type_id = getProperty(request.body, "new_p_type_id")
-
-      const pool = new Pool()
-      const res = await pool.query("select * from products where p_type_id=$1", [new_p_type_id])
-      await pool.end()
-
-      return res.rows
-    } catch (err) {
-      console.log(err)
-      reply.code(500).send(err.message)
-    }
-  })
-
   fastify.register(async (instance, opts, done) => {
     instance.addHook("preHandler", async (request, reply) => {
-      await checkReqToken(request, reply)
+      await checkReqToken(request, reply, ["admin"])
+    })
+    instance.get("/get/products", async function (request, reply) {
+      try {
+        const pool = new Pool()
+        const res = await pool.query("select * from products", [])
+        await pool.end()
+
+        return res.rows
+      } catch (err) {
+        console.log(err)
+        reply.code(500).send(err.message)
+      }
+    })
+
+    instance.get("/get/products/p_type_id", async function (request, reply) {
+      try {
+        const new_p_type_id = getProperty(request.body, "new_p_type_id")
+
+        const pool = new Pool()
+        const res = await pool.query(
+          "select * from products where p_type_id=$1",
+          [new_p_type_id]
+        )
+        await pool.end()
+
+        return res.rows
+      } catch (err) {
+        console.log(err)
+        reply.code(500).send(err.message)
+      }
     })
 
     //type_products
@@ -166,9 +168,7 @@ module.exports = async function (fastify, opts) {
         const name = getProperty(request.body, "name")
 
         const pool = new Pool()
-        await pool.query("insert into brands(name) values($1)", [
-          name,
-        ])
+        await pool.query("insert into brands(name) values($1)", [name])
         await pool.end()
 
         return null
@@ -183,10 +183,7 @@ module.exports = async function (fastify, opts) {
         const brand_id = getProperty(request.body, "brand_id")
 
         const pool = new Pool()
-        await pool.query(
-          "delete from brands where brand_id=$1",
-          [brand_id]
-        )
+        await pool.query("delete from brands where brand_id=$1", [brand_id])
         await pool.end()
 
         return null
@@ -225,9 +222,10 @@ module.exports = async function (fastify, opts) {
         const brand_id = getProperty(request.body, "brand_id")
 
         const pool = new Pool()
-        await pool.query("insert into products(p_type_id, price, name, specif, brand_id) values($1, $2, $3, $4, $5)", [
-          p_type_id, price, name, specif, brand_id
-        ])
+        await pool.query(
+          "insert into products(p_type_id, price, name, specif, brand_id) values($1, $2, $3, $4, $5)",
+          [p_type_id, price, name, specif, brand_id]
+        )
         await pool.end()
 
         return null
@@ -242,10 +240,9 @@ module.exports = async function (fastify, opts) {
         const product_id = getProperty(request.body, "product_id")
 
         const pool = new Pool()
-        await pool.query(
-          "delete from products where product_id=$1",
-          [product_id]
-        )
+        await pool.query("delete from products where product_id=$1", [
+          product_id,
+        ])
         await pool.end()
 
         return null
@@ -280,10 +277,10 @@ module.exports = async function (fastify, opts) {
         const new_specif = getProperty(request.body, "new_specif")
 
         const pool = new Pool()
-        await pool.query(
-          "update products set specif=$1 where product_id=$2",
-          [new_specif, product_id]
-        )
+        await pool.query("update products set specif=$1 where product_id=$2", [
+          new_specif,
+          product_id,
+        ])
         await pool.end()
 
         return null
@@ -299,10 +296,10 @@ module.exports = async function (fastify, opts) {
         const new_price = getProperty(request.body, "new_price")
 
         const pool = new Pool()
-        await pool.query(
-          "update products set price=$1 where product_id=$2",
-          [new_price, product_id]
-        )
+        await pool.query("update products set price=$1 where product_id=$2", [
+          new_price,
+          product_id,
+        ])
         await pool.end()
 
         return null

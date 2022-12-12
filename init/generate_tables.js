@@ -21,7 +21,7 @@ try {
           `create table users (
             login character varying(15) primary key,
             password character varying(150) not null,
-            name character varying(40) not null,
+            name character varying(40) not null
           )`
         )
 
