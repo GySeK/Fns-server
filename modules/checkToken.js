@@ -9,7 +9,7 @@ module.exports = async (token) => {
     const pool = new Pool()
     const res = await pool.query(
       "select exists(SELECT * FROM users WHERE login=$1)",
-      [decoded]
+      [decoded.login]
     )
     await pool.end()
 
