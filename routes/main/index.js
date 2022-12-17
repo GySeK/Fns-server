@@ -10,8 +10,6 @@ module.exports = async function (fastify, opts) {
   fastify.get("/", async function (request, reply) {
     try {
       return "zalupas"
-      return getProperty(request.query, "login")
-      return checkReqToken(request, reply, "admin")
     } catch (err) {
       console.log(err)
       reply.code(500).send(err.message)
@@ -66,12 +64,12 @@ module.exports = async function (fastify, opts) {
 
     instance.get("/get/products/p_type_id", async function (request, reply) {
       try {
-        const new_p_type_id = getProperty(request.body, "new_p_type_id")
+        const p_type_id = getProperty(request.body, "p_type_id")
 
         const pool = new Pool()
         const res = await pool.query(
           "select * from products where p_type_id=$1",
-          [new_p_type_id]
+          [p_type_id]
         )
         await pool.end()
 
@@ -219,7 +217,12 @@ module.exports = async function (fastify, opts) {
         const price = getProperty(request.body, "price")
         const name = getProperty(request.body, "name")
         const specif = getProperty(request.body, "specif")
-        const brand_id = getProperty(request.body, "brand_id")
+        //const brand_id = getProperty(request.body, "brand_id")
+        const brand_id = null
+
+        if("brand_id" in request.body) {
+          brand_id = request.body.brand_id
+        }
 
         const pool = new Pool()
         await pool.query(
