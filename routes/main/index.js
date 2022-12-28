@@ -45,189 +45,54 @@ module.exports = async function (fastify, opts) {
     }
   })
 
+  fastify.get("/get/products", async function (request, reply) {
+    try {
+      const pool = new Pool()
+      const res = await pool.query("select * from products", [])
+      await pool.end()
+
+      return res.rows
+    } catch (err) {
+      console.log(err)
+      reply.code(500).send(err.message)
+    }
+  })
+
+  fastify.get("/get/products/p_type", async function (request, reply) {
+    try {
+      const p_type = getProperty(request.query, "p_type")
+
+      const pool = new Pool()
+      const res = await pool.query(
+        "select * from products where p_type=$1",
+        [p_type]
+      )
+      await pool.end()
+
+      return res.rows
+    } catch (err) {
+      console.log(err)
+      reply.code(500).send(err.message)
+    }
+  })
+
   fastify.register(async (instance, opts, done) => {
     instance.addHook("preHandler", async (request, reply) => {
-      await checkReqToken(request, reply, ["admin"])
-    })
-    instance.get("/get/products", async function (request, reply) {
-      try {
-        const pool = new Pool()
-        const res = await pool.query("select * from products", [])
-        await pool.end()
-
-        return res.rows
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    })
-
-    instance.get("/get/products/p_type_id", async function (request, reply) {
-      try {
-        const p_type_id = getProperty(request.body, "p_type_id")
-
-        const pool = new Pool()
-        const res = await pool.query(
-          "select * from products where p_type_id=$1",
-          [p_type_id]
-        )
-        await pool.end()
-
-        return res.rows
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    })
-
-    //type_products
-
-    instance.get("/get/type_products", async function (request, reply) {
-      try {
-        const pool = new Pool()
-        const res = await pool.query("select * from type_products", [])
-        await pool.end()
-
-        return res.rows
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    })
-
-    instance.post("/post/type_product", async (request, reply) => {
-      try {
-        const name = getProperty(request.body, "name")
-
-        const pool = new Pool()
-        await pool.query("insert into type_products(name) values($1)", [name])
-        await pool.end()
-
-        return null
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    })
-
-    instance.delete("/delete/type_product", async (request, reply) => {
-      try {
-        const p_type_id = getProperty(request.body, "p_type_id")
-
-        const pool = new Pool()
-        await pool.query("delete from type_products where p_type_id=$1", [
-          p_type_id,
-        ])
-        await pool.end()
-
-        return null
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    })
-
-    instance.put("/put/type_product/name", async (request, reply) => {
-      try {
-        const p_type_id = getProperty(request.body, "p_type_id")
-        const new_name = getProperty(request.body, "new_name")
-
-        const pool = new Pool()
-        await pool.query(
-          "update type_products set name=$1 where p_type_id=$2",
-          [new_name, p_type_id]
-        )
-        await pool.end()
-
-        return null
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    })
-
-    //brands
-
-    instance.get("/get/brands", async function (request, reply) {
-      try {
-        const pool = new Pool()
-        const res = await pool.query("select * from brands", [])
-        await pool.end()
-
-        return res.rows
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    })
-
-    instance.post("/post/brand", async (request, reply) => {
-      try {
-        const name = getProperty(request.body, "name")
-
-        const pool = new Pool()
-        await pool.query("insert into brands(name) values($1)", [name])
-        await pool.end()
-
-        return null
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    })
-
-    instance.delete("/delete/brand", async (request, reply) => {
-      try {
-        const brand_id = getProperty(request.body, "brand_id")
-
-        const pool = new Pool()
-        await pool.query("delete from brands where brand_id=$1", [brand_id])
-        await pool.end()
-
-        return null
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    })
-
-    instance.put("/put/brand/name", async (request, reply) => {
-      try {
-        const brand_id = getProperty(request.body, "brand_id")
-        const new_name = getProperty(request.body, "new_name")
-
-        const pool = new Pool()
-        const res = await pool.query(
-          "update brands set name=$1 where brand_id=$2",
-          [new_name, brand_id]
-        )
-        await pool.end()
-
-        return null
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
+      await checkReqToken(request, reply)
     })
 
     //Products
     instance.post("/post/product", async (request, reply) => {
       try {
-        const p_type_id = getProperty(request.body, "p_type_id")
+        const p_type = getProperty(request.body, "p_type")
         const price = getProperty(request.body, "price")
         const name = getProperty(request.body, "name")
         const specif = getProperty(request.body, "specif")
-        //const brand_id = getProperty(request.body, "brand_id")
-        const brand_id = null
-
-        if("brand_id" in request.body) {
-          brand_id = request.body.brand_id
-        }
 
         const pool = new Pool()
         await pool.query(
-          "insert into products(p_type_id, price, name, specif, brand_id) values($1, $2, $3, $4, $5)",
-          [p_type_id, price, name, specif, brand_id]
+          "insert into products(p_type, price, name, specif) values($1, $2, $3, $4)",
+          [p_type, price, name, specif]
         )
         await pool.end()
 
@@ -311,33 +176,16 @@ module.exports = async function (fastify, opts) {
         reply.code(500).send(err.message)
       }
     })
-    instance.put("/put/product/brand", async (request, reply) => {
+
+    instance.put("/put/product/p_type", async (request, reply) => {
       try {
         const product_id = getProperty(request.body, "product_id")
-        const new_brand_id = getProperty(request.body, "new_brand")
-
-        const pool = new Pool()
-        await pool.query(
-          "update products set brand_id=$1 where product_id=$2",
-          [new_brand_id, product_id]
-        )
-        await pool.end()
-
-        return null
-      } catch (err) {
-        console.log(err)
-        reply.code(500).send(err.message)
-      }
-    })
-    instance.put("/put/product/p_type_id", async (request, reply) => {
-      try {
-        const product_id = getProperty(request.body, "product_id")
-        const new_p_type_id = getProperty(request.body, "new_p_type_id")
+        const new_p_type = getProperty(request.body, "new_p_type")
 
         const pool = new Pool()
         await pool.query(
           "update products set p_type_id=$1 where product_id=$2",
-          [new_p_type_id, product_id]
+          [new_p_type, product_id]
         )
         await pool.end()
 
